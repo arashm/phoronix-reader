@@ -1,9 +1,5 @@
-extern crate select;
-extern crate ansi_term;
-extern crate reqwest;
-
 mod article;
-use article::Article;
+use crate::article::Article;
 mod linesplit;
 
 use std::io::Read;
