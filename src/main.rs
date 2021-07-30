@@ -2,13 +2,16 @@ mod article;
 use crate::article::Article;
 mod linesplit;
 
-use std::io::Read;
+use ansi_term::Colour::{Cyan, Green, Yellow};
 use ansi_term::Style;
-use ansi_term::Colour::{Green, Cyan, Yellow};
 
-fn main() {
-    let phoronix_articles = Article::get_articles(open_phoronix().as_str());
-    for article in phoronix_articles.iter().rev() {
+#[tokio::main]
+async fn main() {
+    fetch_articles().await;
+}
+
+async fn fetch_articles() -> () {
+    for article in phoronix_articles().await.iter().rev() {
         let summary = linesplit::split_by_chars(&article.summary, 77).join("\n\t");
         println!(
             "* {}\n\t{}\n\t{}\n\t{}",
@@ -20,9 +23,13 @@ fn main() {
     }
 }
 
-fn open_phoronix() -> String {
-    let mut response = reqwest::get("https://www.phoronix.com/scan.php?page=home").unwrap();
-    let mut content = String::new();
-    response.read_to_string(&mut content).unwrap();
-    content
+async fn phoronix_articles() -> Vec<Article> {
+    Article::get_articles(&open_phoronix().await.unwrap())
+}
+
+async fn open_phoronix() -> Result<String, reqwest::Error> {
+    Ok(reqwest::get("https://www.phoronix.com/scan.php?page=home")
+        .await?
+        .text()
+        .await?)
 }
